@@ -1,9 +1,27 @@
+from picoutil import read_page, read_lines
 import network
 import socket
 from time import sleep
 from machine import Pin
 import rp2
 import sys
+
+def get_wlan_from_file(file):
+    try:
+        wlan = read_lines(file)
+        print("ssid: '" + wlan[0] + "'")
+        return wlan
+    except:
+        print("Provide wlan credentials.")
+        sys.exit()
+
+def load_index(file):
+    try:
+        html = read_page(file)
+        return html
+    except:
+        print("Provide an index.html file.")
+        sys.exit()
 
 def connect(ssid, pwrd):
     picoled = Pin("LED", Pin.OUT)
@@ -32,7 +50,7 @@ def open_socket(ip):
     print(connection)
     return connection
 
-def serve(connection, handler):
+def serve(connection, http_handler):
     while True:
         client = connection.accept()[0]
         request = client.recv(1024)
@@ -41,11 +59,12 @@ def serve(connection, handler):
             request = request.split()[1]
         except IndexError:
             pass
-        html = handler(request)
+        html = http_handler(request)
         client.send(html)
         client.close()
 
-def pico_wlan(ssid, pwrd, handler):
-    ip = connect(ssid, pwrd)
+def wlan(wlan_file, http_handler):
+    wlan = get_wlan_from_file(wlan_file)
+    ip = connect(wlan[0], wlan[1])
     connection = open_socket(ip)
-    serve(connection, handler)
+    serve(connection, http_handler)

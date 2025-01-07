@@ -1,20 +1,14 @@
-from picowlan import pico_wlan
-from picoutil import read_page, read_lines
+from picowlan import wlan, load_index
 from picozero import pico_temp_sensor, pico_led
 import sys
 
-try:
-    html = read_page("index.html")
-    ssid = read_lines("login.txt")
-    print("ssid: '" + ssid[0] + "'")
-except:
-    sys.exit()
+html = load_index("index.html")
 
 pico_led.on()
 state = 'ON'
 temperature = 0
 
-def handler(request):
+def http_handler(request):
     global state, temperature
     if request == '/lighton?':
         pico_led.on()
@@ -29,4 +23,4 @@ def handler(request):
     html2 = html2.replace("{temperature}", str(temperature))
     return str(html2)
 
-pico_wlan(ssid[0], ssid[1], handler)
+wlan("wlan.txt", http_handler)
